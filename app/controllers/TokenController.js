@@ -4,7 +4,7 @@ const Token = require('../models/tokens');
 const CONFIG = require('../config/config');
 
 
-
+//falta validar la parte de que el token no este expirado
 
 exports.createToken = (req, res, next) => {
     //console.log(upload);

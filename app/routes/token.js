@@ -6,10 +6,10 @@ const checkJWT = require('../middleware/check-auth');
 
 //rutas usadas
 
-router.get('/token', checkJWT, TokenController.getTokens);
-router.post('/token', checkJWT, TokenController.createToken);
-router.delete('/token/:id_token', checkJWT, TokenController.deleteToken);
-//no se tendrá una ruta de actualizacion, una vez creado el token no se podrá actualizar, porque se tendría que generar uno nuevo
+router.get('/token', checkJWT.verificarAuth, TokenController.getTokens);
+router.post('/token', checkJWT.verificarAuth, TokenController.createToken);
+router.delete('/token/:id_token', checkJWT.verificarAuth, TokenController.deleteToken);
+//no se tendrá una ruta de actualizacion, una vez creado el token no se podrá actualizar, porque se tendría que generar uno nuevo, porque se van a crear fisicamente en una carpeta
 
 
 

@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const Token = require('../models/tokens');
 //const Order = require('../models/order');
 const CONFIG = require('../config/config');
 
@@ -146,40 +145,13 @@ exports.updateProfile = (req, res, next) => {
   });
 };
 
-exports.getAllUsers = async (req, res, next) => {
-  
- 
+exports.getAllUsers = (req, res, next) => {
   User
     .find({ propietario: req.decoded.user._id })
     // .select('_id name price')
     .exec()
     .then(users => {
-      //const tokens =Token.findOne({ propietario: users._id })
-      //console.log(tokens.schema);
-      //console.log(Object.values(users));
-      let tokens= "";
-      users.forEach(value => {
-        //console.log(value["_id"])
-        tokens =Token.findOne({ propietario: value["_id"]  })
-        
-        
-      })
-      
-     
-      const response2 = {
-        tokens: tokens.map(token => {
-          return {
-           
-            name: token.nombre_token
-           
-            //tokens:tokens
-          }
-        })
-        
-      };
-      //console.log(tokens);
       const response = {
-        
         count: users.length,
         users: users.map(user => {
           return {
@@ -189,12 +161,11 @@ exports.getAllUsers = async (req, res, next) => {
             apellido_mat: user.apellido_mat,
             email: user.price,
             avatar: user.avatar,
-            phone: user.phone,
-            //tokens:tokens
+            phone: user.phone
           }
         })
       };
-      res.status(200).json(response2);
+      res.status(200).json(response);
     })
     
     .catch(error => {
