@@ -50,13 +50,5 @@ exports.deleteToken = (req, res, next) => {
 			next(error);
 		});
 };
-exports.getProfile = (req, res, next) => {
-    
-};
-exports.updateProfile = (req, res, next) => {
- 
-};
 
-exports.deleToken = (req, res, next) => {
-    
-};
+

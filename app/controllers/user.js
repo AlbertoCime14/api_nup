@@ -1,9 +1,10 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const Token = require('../models/tokens');
 //const Order = require('../models/order');
 const CONFIG = require('../config/config');
 
-
+//unicamente sirve para crear superadministradores...
 exports.signUp = (req, res, next) => {
   let user = new User();
   user.name = req.body.name;
@@ -16,6 +17,44 @@ exports.signUp = (req, res, next) => {
   user.is_Admin = req.body.is_Admin;
   user.phone = req.body.phone;
 
+
+  User.findOne({ email: req.body.email }, (err, existingUser) => {
+    if (existingUser) {
+      res.json({
+        success: false,
+        message: 'Usuario registrado con ese email'
+      });
+
+    } else {
+      user.save();
+
+      var token = jwt.sign({
+        user: user
+      }, CONFIG.SECRET_TOKEN, {
+        expiresIn: '7d'
+      });
+
+      res.json({
+        success: true,
+        message: 'Registro con éxito',
+        token: token
+      });
+    }
+
+  });
+};
+exports.registerUser = (req, res, next) => {
+  let user = new User();
+  user.name = req.body.name;
+  user.apellido_pat = req.body.apellido_pat;
+  user.apellido_mat = req.body.apellido_mat;
+  user.name = req.body.name;
+  user.email = req.body.email;
+  user.password = req.body.password;
+  user.avatar = user.gravatar();
+  user.is_Admin = req.body.is_Admin;
+  user.phone = req.body.phone;
+  user.propietario = req.decoded.user._id;
 
   User.findOne({ email: req.body.email }, (err, existingUser) => {
     if (existingUser) {
@@ -107,13 +146,40 @@ exports.updateProfile = (req, res, next) => {
   });
 };
 
-exports.getAllUsers = (req, res, next) => {
+exports.getAllUsers = async (req, res, next) => {
+  
+ 
   User
-    .find()
+    .find({ propietario: req.decoded.user._id })
     // .select('_id name price')
     .exec()
     .then(users => {
+      //const tokens =Token.findOne({ propietario: users._id })
+      //console.log(tokens.schema);
+      //console.log(Object.values(users));
+      let tokens= "";
+      users.forEach(value => {
+        //console.log(value["_id"])
+        tokens =Token.findOne({ propietario: value["_id"]  })
+        
+        
+      })
+      
+     
+      const response2 = {
+        tokens: tokens.map(token => {
+          return {
+           
+            name: token.nombre_token
+           
+            //tokens:tokens
+          }
+        })
+        
+      };
+      //console.log(tokens);
       const response = {
+        
         count: users.length,
         users: users.map(user => {
           return {
@@ -123,12 +189,14 @@ exports.getAllUsers = (req, res, next) => {
             apellido_mat: user.apellido_mat,
             email: user.price,
             avatar: user.avatar,
-            phone: user.phone
+            phone: user.phone,
+            //tokens:tokens
           }
         })
       };
-      res.status(200).json(response);
+      res.status(200).json(response2);
     })
+    
     .catch(error => {
       next(error);
     })

@@ -20,6 +20,7 @@ const UserSchema = new Schema({
     type: String,
   },
   created: { type: Date, default: Date.now },
+  propietario:  { type: Schema.Types.ObjectId, ref: 'User'},
 });
 
 //Function to handleEvent of password modification 
