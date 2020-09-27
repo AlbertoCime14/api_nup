@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const Token = require('../models/tokens');
+const Alarma = require('../models/alarma')
 const CONFIG = require('../config/config'); //va servir para crear el jwt del excell
 var Excel = require('exceljs');
 const mkdirp = require('mkdirp');
@@ -24,22 +25,33 @@ const delete_file = (directory) => {
 
 exports.createToken = (req, res, next) => {
     //aqui falta validar que los parametros no vengan vacios desde el post
-    //console.log(upload);
-    //console.log(req.file); tal vez me sirva para la lectura del archivo
     let token = new Token();
     token.propietario = req.decoded.user._id;
     token.nombre_token = req.body.nombre_token;
     token.nota_recordatoria = req.body.nota_recordatoria;
-    token.disponible = req.body.disponible;
+    token.disponible = req.body.disponible; //porque los tokens tienen un vencimiento de 7 dias o un mes, explicar al equipo, para que cuando el token venza se actualice en el servidor y ya no funcione a la hora de generar la alarma, al momento de crear una alarma validar si el token sigue siendo valido
     token.save();
-    /*res.json({
-        success: true,
-        message: 'Token agregado correctamente'
-    });*/
-    //console.log("entro y se creo correctamente el token")
     req.body.token = token;
     return next();
 };
+exports.createAlarma = (req, res, next) => {
+    //aqui falta validar que los parametros no vengan vacios desde el post
+    let alarma = new Alarma();
+    //console.log(req.decoded.id_token);
+    alarma.id_token = req.decoded.id_token;
+    alarma.ip_address = req.body.ip_address;
+    alarma.hostname = req.body.hostname;
+    alarma.mac_addres = req.body.mac_addres;
+    alarma.save();
+    res.json({
+        success: true,
+        message: 'Alarma generada'
+    });
+    //console.log("entro y se creo correctamente el token")
+    //req.body.token = token; PENDIENTE, DESCOMENTAR
+    //return next();
+};
+
 
 exports.getTokens = (req, res, next) => {
     const hostname = req.headers.host;
