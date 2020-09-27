@@ -212,7 +212,8 @@ exports.getTokenFile = (req, res, next) => {
     res.download(directoryPath, (err) => {
         if (err) {
             res.status(500).send({
-                message: "No se puede descargar el archivo, error al procesar la petición",
+                //message: "No se puede descargar el archivo, error al procesar la petición",
+                message: `Could not upload the file: ${fileName}. ${err}`,
             });
         }
     });
