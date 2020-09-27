@@ -201,7 +201,7 @@ exports.getTokenFile = (req, res, next) => {
     const fileName = req.params.name_file;
     var currentPath = process.cwd();
     const separador = '/';
-    var path_file = '/app/files/tokens_generated/tokens_users';
+    var path_file = '/files/tokens_generated/tokens_users';
     path_final = currentPath + path_file;
     //console.log(id_user);
     //console.log(id_token);
