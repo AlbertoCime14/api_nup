@@ -4,6 +4,7 @@ const Token = require('../models/tokens');
 const CONFIG = require('../config/config'); //va servir para crear el jwt del excell
 var Excel = require('exceljs');
 const mkdirp = require('mkdirp');
+global.__basedir = __dirname;
 const checkDirectorySync = (directory) => {
     try {
         fs.statSync(directory);
@@ -22,6 +23,7 @@ const delete_file = (directory) => {
 //falta validar la parte de que el token no este expirado
 
 exports.createToken = (req, res, next) => {
+    //aqui falta validar que los parametros no vengan vacios desde el post
     //console.log(upload);
     //console.log(req.file); tal vez me sirva para la lectura del archivo
     let token = new Token();
@@ -34,23 +36,43 @@ exports.createToken = (req, res, next) => {
         success: true,
         message: 'Token agregado correctamente'
     });*/
-    console.log("entro y se creo correctamente el token")
+    //console.log("entro y se creo correctamente el token")
     req.body.token = token;
     return next();
 };
 
 exports.getTokens = (req, res, next) => {
-    Token.find({ propietario: req.decoded.user._id })
+    const hostname = req.headers.host;
+    //console.log(hostname);
+    const baseurl = '/api_v1/tokens/token/file/'; //hay que ponerla en una variable globa para que agarre el dominiio del servidor, esto es solo para pruebas
+    const dominio = hostname + baseurl;
+    const id_user = req.decoded.user._id;
+    const separador = '/';
+    const tipo = '.xlsx'; //esta puede cambiar más adelante
+    Token.find({ propietario: id_user })
         .populate('propietario')
-        .exec((err, tokens) => {
-            if (tokens) {
-                res.json({
-                    success: true,
-                    message: "Lista de tokens",
-                    tokens: tokens
-                });
-            }
-        });
+        .exec()
+        .then(tokens => {
+            const response = {
+                count: tokens.length,
+                tokens: tokens.map(token => {
+                    return {
+                        _id: token._id,
+                        Nombre_token: token.nombre_token,
+                        nota_recordatoria: token.nota_recordatoria,
+                        fecha_creacion: token.fecha_creacion,
+                        token_url: dominio + token._id + separador + token.nombre_token + tipo
+
+                    }
+                })
+            };
+            res.status(200).json(response);
+        })
+
+    .catch(error => {
+        next(error);
+    })
+
 };
 
 exports.deleteToken = (req, res, next) => {
@@ -69,7 +91,7 @@ exports.deleteToken = (req, res, next) => {
         });
 };
 
-exports.generateFile = (req, res) => {
+exports.generateFile = (req, res, next) => {
 
     //esta funcion a través del next recibirá el id del usuario, para que se crea la carpeta en donde van a estar los tokens genereados  
     data = req.decoded;
@@ -80,12 +102,15 @@ exports.generateFile = (req, res) => {
     var dest = './app/files/tokens_generated/temp/' + file_name_dos;
     var dest_dos = './app/files/tokens_generated/tokens_users';
     const path = require('path');
+
+    var path_final = '';
     //var path = require('path');
-    appRoot = path.resolve(__dirname);
+
     //var hostname = req.headers.host;
 
-    console.log(token_data);
-    //console.log(data.user);
+
+    //console.log(token_data);
+
     payload = {
 
         id: data.user._id,
@@ -102,7 +127,7 @@ exports.generateFile = (req, res) => {
             expiresIn: '7d'
         });
     //console.log(token);
-    //fs.copyFile(src, appRoot.resolve(dest, file_name)
+
     //res.json({ message: 'file archived!' });
     //console.log('entro');
 
@@ -111,7 +136,6 @@ exports.generateFile = (req, res) => {
             console.log("Error Found:", err);
         } else {
             var workbook = new Excel.Workbook();
-            var filename = file_name_dos;
             workbook.xlsx.readFile(dest).then(function() {
                 var worksheet = workbook.getWorksheet(1);
                 var row_uno = worksheet.getRow(1500);
@@ -127,26 +151,59 @@ exports.generateFile = (req, res) => {
                 const uploadDir = path.join(dest_dos, tokenPath);
                 const dir_final = path.join(uploadDir, token_id_path);
                 // Check directory and create (if needed)
-                console.log(dir_final);
-                console.log(token_id_path);
+                //console.log(dir_final);
+                //console.log(token_id_path);
                 checkDirectorySync(dir_final);
+                path_final = dir_final + `/${token_data.nombre_token}.xlsx`;
+                //console.log(path_final)
 
                 // save the content in a new file (formulas re-calculated)
-                workbook.xlsx.writeFile(dir_final + `/${token_data.nombre_token}.xlsx`);
-                delete_file(dest);
+                workbook.xlsx.writeFile(path_final);
+
+                delete_file(dest); //para borrar el archivo temporal
+                //updated_token(token_id_path, path_final);
+                //console.log(path_final);
+                //req.body.path_final = path_final;
+                //return next();
             });
 
 
-            // Get the current filenames 
-            // after the function 
-            //getCurrentFilenames();
-            //res.json({ message: 'file archived!' });
+
         }
+    });
+    res.json({
+        success: true,
+        message: 'Token generado con éxito'
     });
 
 
 
 
-    return res.status(200).send({ success: true, message: "Token creado correctamente" });
 
+
+};
+
+exports.getTokenFile = (req, res, next) => {
+    const id_user = req.decoded.user._id;
+    const id_token = req.params.id_token;
+    const fileName = req.params.name_file;
+    var currentPath = process.cwd();
+    const separador = '/';
+    var path_file = '/app/files/tokens_generated/tokens_users';
+    path_final = currentPath + path_file;
+    //console.log(id_user);
+    //console.log(id_token);
+    //console.log(fileName);
+    //console.log(currentPath);
+    const directoryPath = path_final + separador + id_user + separador + id_token + separador + fileName;
+    //console.log(directoryPath);
+    res.download(directoryPath, (err) => {
+        if (err) {
+            res.status(500).send({
+                message: "No se puede descargar el archivo, error al procesar la petición",
+            });
+        }
+    });
+
+    //console.log(directoryPath);
 };
