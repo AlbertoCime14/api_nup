@@ -9,13 +9,10 @@ const checkJWT = require('../middleware/check-auth');
 router.get('/token', checkJWT.verificarAuth, TokenController.getTokens); //falta el list que borre
 router.post('/token', checkJWT.verificarAuth, TokenController.createToken, TokenController.generateFile);
 router.delete('/token/:id_token', checkJWT.verificarAuth, TokenController.deleteToken);
-router.get("/token/file/:id_token/:name_file", checkJWT.verificarAuth, TokenController.getTokenFile);
-router.post("/token/alarma", checkJWT.verificarAuth, TokenController.createAlarma);
 //no se tendrá una ruta de actualizacion, una vez creado el token no se podrá actualizar, porque se tendría que generar uno nuevo, porque se van a crear fisicamente en una carpeta
-//checkJWT.verificarAuth esta verificacion se hará cuando se quiera mandar la alarma al servidor
-//checkJWT.verificarAuth,
-// ,TokenController.createToken
-//, TokenController.getTokens
+router.get("/download/:id_token/:name_file", checkJWT.verificarAuth, TokenController.getTokenFile);
 
 
+//alarmas//
+router.post("/token/alarma", checkJWT.verificarAuth, TokenController.createAlarma);
 module.exports = router;

@@ -1,7 +1,7 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const morgan = require('morgan'); //Morgan is used for logging request details
-const cors = require('cors'); //Package to connect middle-ware or cross-platform applications
+var cors = require('cors'); //Package to connect middle-ware or cross-platform applications
 const path = require('path');
 
 const app = express(); //wrapping the new express application in app variable 
