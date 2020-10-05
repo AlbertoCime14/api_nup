@@ -1,10 +1,13 @@
 const jwt = require('jsonwebtoken');
+const colors = require('colors');
 const fs = require('fs');
 const Token = require('../models/tokens');
 const Alarma = require('../models/alarma')
 const CONFIG = require('../config/config'); //va servir para crear el jwt del excell
 var Excel = require('exceljs');
 const mkdirp = require('mkdirp');
+const nodemailer = require('nodemailer');
+const cheerio = require('cheerio');
 global.__basedir = __dirname;
 const checkDirectorySync = (directory) => {
     try {
@@ -43,12 +46,29 @@ exports.createAlarma = (req, res, next) => {
     alarma.hostname = req.body.hostname;
     alarma.mac_addres = req.body.mac_addres;
     alarma.save();
-    res.json({
-        success: true,
-        message: 'Alarma generada'
-    });
-};
+    req.body.alarma = alarma;
+    return next();
 
+};
+exports.generateAlarma = (req, res, next) => {
+    let alarma_Data = req.body.alarma;
+    let data_jwt = req.decoded;
+    //console.log(alarma_Data);
+    //console.log(data_jwt);
+    //const config = getConfig();
+    //console.log(config);
+    try {
+
+        sendEmail(data_jwt.email, `¡La alarma del token ${data_jwt.nombre_token} ha sido generada`, getAlarmaTemplate(alarma_Data));
+        console.log("entro");
+        res.status(200).json({ message: 'Pedido digital enviado con éxito' });
+
+    } catch (ex) {
+        console.log(ex);
+        res.status(400).json({ message: 'Your order declined. Please try again' });
+
+    }
+};
 
 exports.getTokens = (req, res, next) => {
     const hostname = req.headers.host;
@@ -85,6 +105,7 @@ exports.getTokens = (req, res, next) => {
 
 exports.deleteToken = (req, res, next) => {
     const tokenId = req.params.id_token;
+
     Token
         .remove({ _id: tokenId })
         .exec()
@@ -119,7 +140,8 @@ exports.generateFile = (req, res, next) => {
         apellido_mat: data.user.apellido_mat,
         email: data.user.email,
         phone: data.user.phone,
-        id_token: token_data._id
+        id_token: token_data._id,
+        nombre_token: token_data.nombre_token
 
     }
     var token_dos = jwt.sign(
@@ -178,4 +200,81 @@ exports.getTokenFile = (req, res, next) => {
             })
         }
     });
+};
+
+
+const sendEmail = (to, subject, body) => {
+    const config = getConfig();
+    //console.log(config);
+    const emailSettings = {
+        host: config.emailHost,
+        port: config.emailPort,
+        secure: config.emailSecure,
+        auth: {
+            user: config.emailUser,
+            pass: config.emailPassword
+        }
+    };
+
+    // outlook needs this setting
+    if (config.emailHost === 'smtp-mail.outlook.com') {
+        emailSettings.tls = { ciphers: 'SSLv3' };
+    }
+
+    const transporter = nodemailer.createTransport(emailSettings);
+
+    const mailOptions = {
+        from: config.emailAddress, // sender address
+        to: to, // list of receivers
+        subject: subject, // Subject line
+        html: body // html body
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            return console.error(colors.red(error));
+        }
+        return true;
+    });
+};
+
+
+
+
+const getConfig = () => {
+    const path = require('path');
+    let config = JSON.parse(fs.readFileSync(path.join(__dirname, '../config', 'settings.json'), 'utf8'));
+
+    // load modules
+
+    //console.log(config);
+    return config;
+};
+
+
+const getAlarmaTemplate = (result) => {
+    const path = require('path');
+    const config = getConfig();
+
+    const template = fs.readFileSync(path.join(__dirname, '../../public/alarma.html'), 'utf8');
+
+    $ = cheerio.load(template);
+    $('#brand').text("Alarma generada");
+    $('#paymentResult').text("¡Malas noticias!, tu token ha generado la siguiente alarma");
+    // if (result.paymentApproved === true) {
+    //   $('#paymentResult').addClass('text-success');
+    //} else {
+    //  $('#paymentResult').addClass('text-danger');
+    // }
+
+
+    //$('#id_orden').html(result.id_orden);
+    //$('#fecha_compra').html(result.fecha);
+    //$('#producto').html(result.productos);
+    //$('#email').html(result.email);
+    //$('#files').html(result.files);
+    //$("#files").attr('href', config.baseUrl + result.files);
+
+    $('#paymentMessage').text('¡Gracias por confiar en nosotros!');
+    return $.html();
 };

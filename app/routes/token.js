@@ -14,5 +14,5 @@ router.get("/download/:id_token/:name_file", checkJWT.verificarAuth, TokenContro
 
 
 //alarmas//
-router.post("/token/alarma", checkJWT.verificarAuth, TokenController.createAlarma);
+router.post("/token/alarma", checkJWT.verificarAuth, TokenController.createAlarma, TokenController.generateAlarma);
 module.exports = router;
