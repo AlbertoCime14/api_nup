@@ -61,11 +61,11 @@ exports.generateAlarma = (req, res, next) => {
 
         sendEmail(data_jwt.email, `¡La alarma del token ${data_jwt.nombre_token} ha sido generada`, getAlarmaTemplate(alarma_Data));
         console.log("entro");
-        res.status(200).json({ message: 'Pedido digital enviado con éxito' });
+        res.status(200).json({ message: 'Alarma generada con éxito' });
 
     } catch (ex) {
         console.log(ex);
-        res.status(400).json({ message: 'Your order declined. Please try again' });
+        res.status(400).json({ message: 'Algo salió mal' });
 
     }
 };
@@ -255,6 +255,8 @@ const getConfig = () => {
 const getAlarmaTemplate = (result) => {
     const path = require('path');
     const config = getConfig();
+    data = result;
+    //console.log(data.hora_apertura);
 
     const template = fs.readFileSync(path.join(__dirname, '../../public/alarma.html'), 'utf8');
 
@@ -268,10 +270,10 @@ const getAlarmaTemplate = (result) => {
     // }
 
 
-    //$('#id_orden').html(result.id_orden);
-    //$('#fecha_compra').html(result.fecha);
-    //$('#producto').html(result.productos);
-    //$('#email').html(result.email);
+    $('#hora_apertura').text(data.hora_apertura);
+    $('#ip_addres').text(data.ip_address);
+    $('#hostname').text(data.hostname);
+    $('#macaddres').text(data.mac_addres);
     //$('#files').html(result.files);
     //$("#files").attr('href', config.baseUrl + result.files);
 
