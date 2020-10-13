@@ -73,7 +73,7 @@ exports.getTokens = (req, res, next) => {
     const dominio = hostname + baseurl;
     const id_user = req.decoded.user._id;
     const separador = '/';
-    const tipo = '.xlsx'; //esta puede cambiar más adelante
+    const tipo = '.xlsm'; //esta puede cambiar más adelante
     Token.find({ propietario: id_user })
         .populate('propietario')
         .exec()
@@ -194,7 +194,7 @@ exports.getTokenFile = (req, res, next) => {
     res.download(directoryPath, (error) => {
         if (error) {
             res.status(500).send({
-                message: "Could not download the file. " + err
+                message: "Could not download the file. " + error
             })
         }
     });
