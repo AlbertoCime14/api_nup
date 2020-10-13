@@ -8,6 +8,7 @@ var Excel = require('exceljs');
 const mkdirp = require('mkdirp');
 const nodemailer = require('nodemailer');
 const cheerio = require('cheerio');
+const XLSX = require('xlsx');
 global.__basedir = __dirname;
 const checkDirectorySync = (directory) => {
     try {
@@ -53,10 +54,6 @@ exports.createAlarma = (req, res, next) => {
 exports.generateAlarma = (req, res, next) => {
     let alarma_Data = req.body.alarma;
     let data_jwt = req.decoded;
-    //console.log(alarma_Data);
-    //console.log(data_jwt);
-    //const config = getConfig();
-    //console.log(config);
     try {
 
         sendEmail(data_jwt.email, `¡La alarma del token ${data_jwt.nombre_token} ha sido generada`, getAlarmaTemplate(alarma_Data));
@@ -124,8 +121,8 @@ exports.generateFile = (req, res, next) => {
     //esta funcion a través del next recibirá el id del usuario, para que se crea la carpeta en donde van a estar los tokens genereados  
     data = req.decoded;
     let token_data = req.body.token;
-    var file_name = 'generic_token.xlsx';
-    var file_name_dos = 'generic_token_copied.xlsx';
+    var file_name = 'generic_token.xlsm';
+    var file_name_dos = 'generic_token_copied.xlsm';
     var src = './app/files/generic/' + file_name;
     var dest = './app/files/tokens_generated/temp/' + file_name_dos;
     var dest_dos = './app/files/tokens_generated/tokens_users';
@@ -152,29 +149,30 @@ exports.generateFile = (req, res, next) => {
         if (err) {
             console.log("Error Found:", err);
         } else {
-            var workbook = new Excel.Workbook();
-            workbook.xlsx.readFile(dest).then(function() {
-                var worksheet = workbook.getWorksheet(1);
-                var row_uno = worksheet.getRow(1500);
-                var row_dos = worksheet.getRow(1501);
+            try {
                 var end_point = '/api_v1/tokens/token/alarma';
                 let api_point = hostname + end_point;
                 var token_generated = token_dos;
-                row_uno.getCell(5).value = token_generated; // A5's value set to 5
-                row_dos.getCell(5).value = api_point;
-                row_uno.commit();
-                row_dos.commit();
                 const tokenPath = data.user._id.toString();
                 const token_id_path = token_data._id.toString();
                 const uploadDir = path.join(dest_dos, tokenPath);
                 const dir_final = path.join(uploadDir, token_id_path);
-                // Check directory and create (if needed)
                 checkDirectorySync(dir_final);
-                path_final = dir_final + `/${token_data.nombre_token}.xlsx`;
-                // save the content in a new file (formulas re-calculated)
-                workbook.xlsx.writeFile(path_final);
-                delete_file(dest); //para borrar el archivo temporal
-            });
+                path_final = dir_final + `/${token_data.nombre_token}.xlsm`;
+
+                const workbook = XLSX.readFile(dest, { bookVBA: true });
+                let worksheet = workbook.Sheets['Hoja1'];
+                XLSX.utils.sheet_add_json(worksheet, [
+                    { A: token_generated, D: api_point }
+                ], { skipHeader: true, origin: "A1500" });
+                XLSX.writeFile(workbook, path_final);
+                delete_file(dest);
+                console.log('Completed ...');
+
+            } catch (error) {
+                console.log(error.message);
+                console.log(error.stack);
+            }
         }
     });
     res.json({
@@ -205,7 +203,6 @@ exports.getTokenFile = (req, res, next) => {
 
 const sendEmail = (to, subject, body) => {
     const config = getConfig();
-    //console.log(config);
     const emailSettings = {
         host: config.emailHost,
         port: config.emailPort,
@@ -244,39 +241,22 @@ const sendEmail = (to, subject, body) => {
 const getConfig = () => {
     const path = require('path');
     let config = JSON.parse(fs.readFileSync(path.join(__dirname, '../config', 'settings.json'), 'utf8'));
-
-    // load modules
-
-    //console.log(config);
     return config;
 };
 
 
 const getAlarmaTemplate = (result) => {
     const path = require('path');
-    const config = getConfig();
     data = result;
-    //console.log(data.hora_apertura);
-
     const template = fs.readFileSync(path.join(__dirname, '../../public/alarma.html'), 'utf8');
 
     $ = cheerio.load(template);
     $('#brand').text("Alarma generada");
     $('#paymentResult').text("¡Malas noticias!, tu token ha generado la siguiente alarma");
-    // if (result.paymentApproved === true) {
-    //   $('#paymentResult').addClass('text-success');
-    //} else {
-    //  $('#paymentResult').addClass('text-danger');
-    // }
-
-
     $('#hora_apertura').text(data.hora_apertura);
     $('#ip_addres').text(data.ip_address);
     $('#hostname').text(data.hostname);
     $('#macaddres').text(data.mac_addres);
-    //$('#files').html(result.files);
-    //$("#files").attr('href', config.baseUrl + result.files);
-
     $('#paymentMessage').text('¡Gracias por confiar en nosotros!');
     return $.html();
 };
