@@ -183,7 +183,8 @@ exports.generateFile = (req, res, next) => {
 
 exports.getTokenFile = (req, res, next) => {
     const path = require('path');
-    const dinname = path.join(__dirname, '../')
+    //console.log(__dirname)
+    const dinname = path.join(__dirname, '../../../')
     const id_user = req.decoded.user._id;
     const id_token = req.params.id_token;
     const fileName = req.params.name_file;
