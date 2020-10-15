@@ -127,11 +127,11 @@ exports.generateFile = (req, res, next) => {
     let token_data = req.body.token;
     var file_name = 'generic_token.xlsm';
     var file_name_dos = 'generic_token_copied.xlsm';
-    var src = '/files/generic/' + file_name;
+    var src = 'files/generic/' + file_name;
     var path_copy = dinname + src;
-    var dest = '/files/tokens_generated/temp/' + file_name_dos;
+    var dest = 'files/tokens_generated/temp/' + file_name_dos;
     var path_copy_dest = dinname + dest;
-    var dest_dos = '/files/tokens_generated/tokens_users';
+    var dest_dos = 'files/tokens_generated/tokens_users';
 
     var dest_final = dinname + dest_dos;
     //const path = require('path');
