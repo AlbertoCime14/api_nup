@@ -9,6 +9,7 @@ const mkdirp = require('mkdirp');
 const nodemailer = require('nodemailer');
 const cheerio = require('cheerio');
 const XLSX = require('xlsx');
+const { dirname } = require('path');
 global.__basedir = __dirname;
 const checkDirectorySync = (directory) => {
     try {
@@ -118,15 +119,22 @@ exports.deleteToken = (req, res, next) => {
 };
 
 exports.generateFile = (req, res, next) => {
-    //esta funcion a través del next recibirá el id del usuario, para que se crea la carpeta en donde van a estar los tokens genereados  
+    //esta funcion a través del next recibirá el id del usuario, para que se crea la carpeta en donde van a estar los tokens genereados
+    const path = require('path');
+    const dinname = path.join(__dirname, '../')
+        //let dirnanme = __dirname;
     data = req.decoded;
     let token_data = req.body.token;
     var file_name = 'generic_token.xlsm';
     var file_name_dos = 'generic_token_copied.xlsm';
-    var src = './app/files/generic/' + file_name;
-    var dest = './app/files/tokens_generated/temp/' + file_name_dos;
-    var dest_dos = './app/files/tokens_generated/tokens_users';
-    const path = require('path');
+    var src = '/files/generic/' + file_name;
+    var path_copy = dinname + src;
+    var dest = '/files/tokens_generated/temp/' + file_name_dos;
+    var path_copy_dest = dinname + dest;
+    var dest_dos = '/files/tokens_generated/tokens_users';
+
+    var dest_final = dinname + dest_dos;
+    //const path = require('path');
     const hostname = req.headers.host;
     var path_final = '';
     payload = {
@@ -145,7 +153,7 @@ exports.generateFile = (req, res, next) => {
         payload, CONFIG.SECRET_TOKEN, {
             expiresIn: '7d'
         });
-    fs.copyFile(src, dest, (err) => {
+    fs.copyFile(path_copy, path_copy_dest, (err) => {
         if (err) {
             console.log("Error Found:", err);
         } else {
@@ -155,24 +163,25 @@ exports.generateFile = (req, res, next) => {
                 var token_generated = token_dos;
                 const tokenPath = data.user._id.toString();
                 const token_id_path = token_data._id.toString();
-                const uploadDir = path.join(dest_dos, tokenPath);
+                const uploadDir = path.join(dest_final, tokenPath);
                 const dir_final = path.join(uploadDir, token_id_path);
                 checkDirectorySync(dir_final);
                 path_final = dir_final + `/${token_data.nombre_token}.xlsm`;
 
-                const workbook = XLSX.readFile(dest, { bookVBA: true });
+                const workbook = XLSX.readFile(path_copy_dest, { bookVBA: true });
                 let worksheet = workbook.Sheets['Hoja1'];
                 XLSX.utils.sheet_add_json(worksheet, [
                     { A: token_generated, D: api_point }
                 ], { skipHeader: true, origin: "A1500" });
                 XLSX.writeFile(workbook, path_final);
-                delete_file(dest);
+                delete_file(path_copy_dest);
                 console.log('Completed ...');
 
             } catch (error) {
                 console.log(error.message);
                 console.log(error.stack);
             }
+            console.log("copio esa madre");
         }
     });
     res.json({
@@ -183,8 +192,7 @@ exports.generateFile = (req, res, next) => {
 
 exports.getTokenFile = (req, res, next) => {
     const path = require('path');
-    //console.log(__dirname)
-    const dinname = path.join(__dirname, '../../../')
+    const dinname = path.join(__dirname, '../')
     const id_user = req.decoded.user._id;
     const id_token = req.params.id_token;
     const fileName = req.params.name_file;
