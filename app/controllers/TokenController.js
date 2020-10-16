@@ -209,6 +209,36 @@ exports.getTokenFile = (req, res, next) => {
     });
 };
 
+exports.getAlarmas = (req, res) => {
+
+
+    const id_token = req.params.id_token;
+    Alarma.find({ id_token: id_token })
+
+    .exec()
+        .then(alarmas => {
+            const response = {
+                count: alarmas.length,
+                tokens: alarmas.map(alarma => {
+                    return {
+                        _id: alarma._id,
+                        hora_apertura: alarma.hora_apertura,
+                        ip_address: alarma.ip_address,
+                        hostname: alarma.hostname,
+                        mac_addres: alarma.mac_addres
+
+                    }
+                })
+            };
+            res.status(200).json(response);
+        })
+
+    .catch(error => {
+        console.log(error)
+    })
+
+};
+
 
 const sendEmail = (to, subject, body) => {
     const config = getConfig();

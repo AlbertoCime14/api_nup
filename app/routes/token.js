@@ -13,6 +13,10 @@ router.delete('/token/:id_token', checkJWT.verificarAuth, TokenController.delete
 router.get("/download/:id_token/:name_file", checkJWT.verificarAuth, TokenController.getTokenFile);
 
 
+
+
 //alarmas//
 router.post("/token/alarma", checkJWT.verificarAuth, TokenController.createAlarma, TokenController.generateAlarma);
+
+router.get("/token/alarma/:id_token", checkJWT.verificarAuth, TokenController.getAlarmas);
 module.exports = router;
