@@ -6,6 +6,10 @@ const AlertaSchema = new Schema({
     ip_address: String,
     hostname: String,
     mac_addres: String,
+    lat: String,
+    lng: String,
+    country: String,
+    region: String,
     hora_apertura: { type: Date, default: Date.now },
     read: { type: Boolean, default: false }
 }, {

@@ -7,7 +7,7 @@ const path = require('path');
 const app = express(); //wrapping the new express application in app variable 
 //const App= express();
 app.use(express.static(path.join(__dirname, 'files')));
-
+app.set('trust proxy', true);
 //const Token= require('./routes/token')
 //app.use(bodyParser.json());
 //app.use(bodyParser.urlencoded({extended: false}));

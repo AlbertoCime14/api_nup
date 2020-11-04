@@ -10,6 +10,8 @@ const nodemailer = require('nodemailer');
 const cheerio = require('cheerio');
 const XLSX = require('xlsx');
 const { dirname } = require('path');
+var https = require('https');
+const publicIp = require('public-ip');
 global.__basedir = __dirname;
 const checkDirectorySync = (directory) => {
     try {
@@ -39,7 +41,50 @@ exports.createToken = (req, res, next) => {
     req.body.token = token;
     return next();
 };
+exports.getLocalizacon = (req, res, next) => {
+
+    //ver como validar la parte de los erroes en la peticion
+
+    var ipAddress; //esta ip irá en el código final la obtendrá de las peticiones que haga el servidor
+    // The request may be forwarded from local web server.
+    var forwardedIpsStr = req.header('x-forwarded-for');
+    if (forwardedIpsStr) {
+        // 'x-forwarded-for' header may return multiple IP addresses in
+        // the format: "client IP, proxy 1 IP, proxy 2 IP" so take the
+        // the first one
+        var forwardedIps = forwardedIpsStr.split(',');
+        ipAddress = forwardedIps[0];
+    }
+    if (!ipAddress) {
+        // If request was not forwarded
+        ipAddress = req.connection.remoteAddress;
+    }
+
+
+    var ip = '2806:10be:6:16dc::5'; //esto es para motivos de prueba
+    var api_key = 'at_lZ9SrwrBgiw6YCaLNo9cg340vFRyi';
+    var api_url = 'https://geo.ipify.org/api/v1?';
+    var url = api_url + 'apiKey=' + api_key + '&ipAddress=' + ipAddress;
+
+    https.get(url, function(response) {
+        var str = '';
+        response.on('data', function(chunk) { str += chunk; });
+        response.on('end', function() {
+
+            var location_json = JSON.parse(str);
+            //console.log(location_json.location);
+            req.body.location = location_json.location;
+            return next();
+        });
+    }).end();
+
+
+
+
+};
 exports.createAlarma = (req, res, next) => {
+    let location = req.body.location;
+    //console.log(location);
     //aqui falta validar que los parametros no vengan vacios desde el post
     let alarma = new Alarma();
     //console.log(req.decoded.id_token);
@@ -47,6 +92,10 @@ exports.createAlarma = (req, res, next) => {
     alarma.ip_address = req.body.ip_address;
     alarma.hostname = req.body.hostname;
     alarma.mac_addres = req.body.mac_addres;
+    alarma.lat = location.lat;
+    alarma.lng = location.lng;
+    alarma.country = location.country;
+    alarma.region = location.region;
     alarma.save();
     req.body.alarma = alarma;
     return next();
@@ -225,7 +274,11 @@ exports.getAlarmas = (req, res) => {
                         hora_apertura: alarma.hora_apertura,
                         ip_address: alarma.ip_address,
                         hostname: alarma.hostname,
-                        mac_addres: alarma.mac_addres
+                        mac_addres: alarma.mac_addres,
+                        country: alarma.country,
+                        region: alarma.region,
+                        lat: alarma.lat,
+                        lng: alarma.lng,
 
                     }
                 })
