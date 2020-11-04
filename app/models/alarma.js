@@ -10,6 +10,7 @@ const AlertaSchema = new Schema({
     lng: String,
     country: String,
     region: String,
+    ippublica: String,
     hora_apertura: { type: Date, default: Date.now },
     read: { type: Boolean, default: false }
 }, {

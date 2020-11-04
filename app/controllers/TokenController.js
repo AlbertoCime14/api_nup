@@ -61,7 +61,7 @@ exports.getLocalizacon = (req, res, next) => {
     }
 
 
-    var ip = '2806:10be:6:16dc::5'; //esto es para motivos de prueba
+    //var ip = '2806:10be:6:16dc::5'; //esto es para motivos de prueba
     var api_key = 'at_lZ9SrwrBgiw6YCaLNo9cg340vFRyi';
     var api_url = 'https://geo.ipify.org/api/v1?';
     var url = api_url + 'apiKey=' + api_key + '&ipAddress=' + ipAddress;
@@ -74,6 +74,7 @@ exports.getLocalizacon = (req, res, next) => {
             var location_json = JSON.parse(str);
             //console.log(location_json.location);
             req.body.location = location_json.location;
+            req.body.ippublica = ipAddress;
             return next();
         });
     }).end();
@@ -96,6 +97,7 @@ exports.createAlarma = (req, res, next) => {
     alarma.lng = location.lng;
     alarma.country = location.country;
     alarma.region = location.region;
+    alarma.ippublica = req.body.ippublica;
     alarma.save();
     req.body.alarma = alarma;
     return next();
@@ -279,6 +281,7 @@ exports.getAlarmas = (req, res) => {
                         region: alarma.region,
                         lat: alarma.lat,
                         lng: alarma.lng,
+                        ippublica: alarma.ippublica
 
                     }
                 })
