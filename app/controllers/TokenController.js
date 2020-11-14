@@ -4,14 +4,11 @@ const fs = require('fs');
 const Token = require('../models/tokens');
 const Alarma = require('../models/alarma')
 const CONFIG = require('../config/config'); //va servir para crear el jwt del excell
-var Excel = require('exceljs');
 const mkdirp = require('mkdirp');
 const nodemailer = require('nodemailer');
 const cheerio = require('cheerio');
 const XLSX = require('xlsx');
-const { dirname } = require('path');
 var https = require('https');
-const publicIp = require('public-ip');
 global.__basedir = __dirname;
 const checkDirectorySync = (directory) => {
     try {
@@ -60,8 +57,6 @@ exports.getLocalizacon = (req, res, next) => {
         ipAddress = req.connection.remoteAddress;
     }
 
-
-    //var ip = '2806:10be:6:16dc::5'; //esto es para motivos de prueba
     var api_key = 'at_lZ9SrwrBgiw6YCaLNo9cg340vFRyi';
     var api_url = 'https://geo.ipify.org/api/v1?';
     var url = api_url + 'apiKey=' + api_key + '&ipAddress=' + ipAddress;
@@ -85,7 +80,6 @@ exports.getLocalizacon = (req, res, next) => {
 };
 exports.createAlarma = (req, res, next) => {
     let location = req.body.location;
-    //console.log(location);
     //aqui falta validar que los parametros no vengan vacios desde el post
     let alarma = new Alarma();
     //console.log(req.decoded.id_token);
