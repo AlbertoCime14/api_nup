@@ -9,9 +9,12 @@ const app = express(); //wrapping the new express application in app variable
 app.use(express.static(path.join(__dirname, 'files')));
 app.set('trust proxy', true);
 //const Token= require('./routes/token')
-//app.use(bodyParser.json());
-//app.use(bodyParser.urlencoded({extended: false}));
-//app.use('/token', Token )
+app.get('/', (req, res) => {
+        res.send('Bienvenido a la api Nup. para más información visita www.utm.com.mx')
+    })
+    //app.use(bodyParser.json());
+    //app.use(bodyParser.urlencoded({extended: false}));
+    //app.use('/token', Token )
 
 //express application using required packages 
 app.use(bodyParser.json());
