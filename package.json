@@ -31,7 +31,7 @@
     "multer-s3": "^2.9.0",
     "nodemailer": "^6.4.11",
     "public-ip": "^4.0.2",
-    "socket.io": "^2.3.0",
+    "socket.io": "^3.0.0",
     "xlsx": "^0.16.8"
   },
   "devDependencies": {
